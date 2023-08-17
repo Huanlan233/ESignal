@@ -1,0 +1,232 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "OR": [
+          {
+            "north": "none",
+            "south": "none",
+            "east": "none",
+            "west": "none",
+            "charged": false
+          },
+          {
+            "north": "side|up",
+            "east": "side|up",
+            "charged": false
+          },
+          {
+            "south": "side|up",
+            "east": "side|up",
+            "charged": false
+          },
+          {
+            "south": "side|up",
+            "west": "side|up",
+            "charged": false
+          },
+          {
+            "north": "side|up",
+            "west": "side|up",
+            "charged": false
+          }
+        ]
+      },
+      "apply": {
+        "model": "esignal:block/circuit_none"
+      }
+    },
+    {
+      "when": {
+        "north": "side|up",
+        "charged": false
+      },
+      "apply": {
+        "model": "esignal:block/circuit_side",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "side|up",
+        "charged": false
+      },
+      "apply": {
+        "model": "esignal:block/circuit_side"
+      }
+    },
+    {
+      "when": {
+        "east": "side|up",
+        "charged": false
+      },
+      "apply": {
+        "model": "esignal:block/circuit_side",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "up",
+        "charged": false
+      },
+      "apply": {
+        "model": "esignal:block/circuit_side",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "north": "up",
+        "charged": false
+      },
+      "apply": {
+        "model": "esignal:block/circuit_up",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "up",
+        "charged": false
+      },
+      "apply": {
+        "model": "esignal:block/circuit_up"
+      }
+    },
+    {
+      "when": {
+        "east": "up",
+        "charged": false
+      },
+      "apply": {
+        "model": "esignal:block/circuit_up",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "up",
+        "charged": false
+      },
+      "apply": {
+        "model": "esignal:block/circuit_up",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "OR": [
+          {
+            "north": "none",
+            "south": "none",
+            "east": "none",
+            "west": "none",
+            "charged": true
+          },
+          {
+            "north": "side|up",
+            "east": "side|up",
+            "charged": true
+          },
+          {
+            "south": "side|up",
+            "east": "side|up",
+            "charged": true
+          },
+          {
+            "south": "side|up",
+            "west": "side|up",
+            "charged": true
+          },
+          {
+            "north": "side|up",
+            "west": "side|up",
+            "charged": true
+          }
+        ]
+      },
+      "apply": {
+        "model": "esignal:block/circuit_none_charged"
+      }
+    },
+    {
+      "when": {
+        "north": "side|up",
+        "charged": true
+      },
+      "apply": {
+        "model": "esignal:block/circuit_side_charged",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "side|up",
+        "charged": true
+      },
+      "apply": {
+        "model": "esignal:block/circuit_side_charged"
+      }
+    },
+    {
+      "when": {
+        "east": "side|up",
+        "charged": true
+      },
+      "apply": {
+        "model": "esignal:block/circuit_side_charged",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "side|up",
+        "charged": true
+      },
+      "apply": {
+        "model": "esignal:block/circuit_side_charged",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "north": "up",
+        "charged": true
+      },
+      "apply": {
+        "model": "esignal:block/circuit_up_charged",
+        "y": 180
+      }
+    },
+    {
+      "when": {
+        "south": "up",
+        "charged": true
+      },
+      "apply": {
+        "model": "esignal:block/circuit_up_charged"
+      }
+    },
+    {
+      "when": {
+        "east": "up",
+        "charged": true
+      },
+      "apply": {
+        "model": "esignal:block/circuit_up_charged",
+        "y": 270
+      }
+    },
+    {
+      "when": {
+        "west": "up",
+        "charged": true
+      },
+      "apply": {
+        "model": "esignal:block/circuit_up_charged",
+        "y": 90
+      }
+    }
+  ]
+}

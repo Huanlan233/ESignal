@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "esignal",
+  "version": "${version}",
+  "name": "ESignal",
+  "description": "",
+  "authors": [
+    ""
+  ],
+  "contact": {
+    "repo": "https://github.com/Huanlan233/ESignal"
+  },
+  "license": "MIT",
+  "icon": "assets/esignal/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "htext.top.esignal.client.ESignalClient"
+    ],
+    "main": [
+      "htext.top.esignal.ESignal"
+    ]
+  },
+  "mixins": [
+    "esignal.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}",
+    "fabric-language-kotlin": "${fabric_language_kotlin_version}"
+  }
+}

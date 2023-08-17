@@ -1,0 +1,27 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "esignal:block/circuit_charged",
+    "circuit": "esignal:block/circuit_charged"
+  },
+  "elements": [
+    {
+      "from": [ 5, 0.25, 5 ],
+      "to": [ 11, 0.25, 11 ],
+      "shade": false,
+      "faces": {
+        "up": { "uv": [ 5, 5, 11, 11 ], "texture": "#circuit", "tintindex": 0 },
+        "down": { "uv": [ 5, 11, 11, 5 ], "texture": "#circuit", "tintindex": 0 }
+      }
+    },
+    {
+      "from": [ 7, 0.25, 11 ],
+      "to": [ 9, 0.25, 16 ],
+      "shade": false,
+      "faces": {
+        "up": { "uv": [ 7, 11, 9, 16 ], "texture": "#circuit", "tintindex": 0 },
+        "down": { "uv": [ 7, 11, 9, 16 ], "texture": "#circuit", "tintindex": 0 }
+      }
+    }
+  ]
+}
