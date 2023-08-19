@@ -67,7 +67,7 @@
     },
     {
       "when": {
-        "west": "up",
+        "west": "side|up",
         "charge": false
       },
       "apply": {

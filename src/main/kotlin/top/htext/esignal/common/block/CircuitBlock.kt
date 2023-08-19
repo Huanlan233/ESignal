@@ -18,10 +18,11 @@ import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
-import top.htext.esignal.ESignal
+import net.minecraft.world.WorldView
+import top.htext.esignal.utils.ConnectableUtils
 
-
-class CircuitBlock(settings: Settings?) : Block(settings), SidedBlock {
+@SuppressWarnings("deprecation")
+class CircuitBlock(settings: Settings?) : Block(settings), CircuitConnectableBlock {
 	private val shapeCache: MutableMap<BlockState, VoxelShape> = Maps.newHashMap()
 	private val dotState: BlockState
 	private val charge = false
@@ -82,25 +83,16 @@ class CircuitBlock(settings: Settings?) : Block(settings), SidedBlock {
 		private val SHAPES_UP: Map<Direction, VoxelShape> = Maps.newEnumMap(
 			ImmutableMap.of(
 				Direction.NORTH, VoxelShapes.union(
-					SHAPES_FLOOR[Direction.NORTH], createCuboidShape(3.0, 0.0, 0.0, 13.0, 16.0, 1.0)), Direction.SOUTH, VoxelShapes.union(
-					SHAPES_FLOOR[Direction.SOUTH], createCuboidShape(3.0, 0.0, 15.0, 13.0, 16.0, 16.0)), Direction.EAST, VoxelShapes.union(
-					SHAPES_FLOOR[Direction.EAST], createCuboidShape(15.0, 0.0, 3.0, 16.0, 16.0, 13.0)), Direction.WEST, VoxelShapes.union(
-					SHAPES_FLOOR[Direction.WEST], createCuboidShape(0.0, 0.0, 3.0, 1.0, 16.0, 13.0))
+					SHAPES_FLOOR[Direction.NORTH], createCuboidShape(3.0, 0.0, 0.0, 13.0, 16.0, 1.0)
+				), Direction.SOUTH, VoxelShapes.union(
+					SHAPES_FLOOR[Direction.SOUTH], createCuboidShape(3.0, 0.0, 15.0, 13.0, 16.0, 16.0)
+				), Direction.EAST, VoxelShapes.union(
+					SHAPES_FLOOR[Direction.EAST], createCuboidShape(15.0, 0.0, 3.0, 16.0, 16.0, 13.0)
+				), Direction.WEST, VoxelShapes.union(
+					SHAPES_FLOOR[Direction.WEST], createCuboidShape(0.0, 0.0, 3.0, 1.0, 16.0, 13.0)
+				)
 			)
 		)
-		private fun isFullyConnected(state: BlockState): Boolean {
-			return state.get(WIRE_CONNECTION_NORTH).isConnected &&
-					state.get(WIRE_CONNECTION_SOUTH).isConnected &&
-					state.get(WIRE_CONNECTION_EAST).isConnected &&
-					state.get(WIRE_CONNECTION_WEST).isConnected
-		}
-
-		private fun isNotConnected(state: BlockState): Boolean {
-			return ! state.get(WIRE_CONNECTION_NORTH).isConnected &&
-					! state.get(WIRE_CONNECTION_SOUTH).isConnected &&
-					! state.get(WIRE_CONNECTION_EAST).isConnected &&
-					! state.get(WIRE_CONNECTION_WEST).isConnected
-		}
 	}
 
 	override fun appendProperties(builder: StateManager.Builder<Block, BlockState>) {
@@ -122,33 +114,45 @@ class CircuitBlock(settings: Settings?) : Block(settings), SidedBlock {
 	override fun getOutlineShape(state: BlockState, world: BlockView, pos: BlockPos, context: ShapeContext): VoxelShape {
 		return shapeCache[state.with(CHARGE, false)] !!
 	}
+
+
+	@Deprecated("Deprecated in Java")
+	override fun canPlaceAt(state: BlockState?, world: WorldView, pos: BlockPos): Boolean {
+		val blockPos = pos.down()
+		val blockState = world.getBlockState(blockPos)
+		return blockState.isSideSolidFullSquare(world, pos, Direction.UP)
+	}
+
 	@Deprecated("Deprecated in Java", ReplaceWith("super.prepare(state, world, pos, flags, maxUpdateDepth)", "net.minecraft.block.Block"))
 	override fun prepare(state: BlockState, access: WorldAccess, pos: BlockPos, flags: Int, maxUpdateDepth: Int) {
-		val mutable = Mutable()
-
-		for ( direction : Direction in Direction.Type.HORIZONTAL ) { // Traverses changes in four direction.
-
-			mutable.set(pos, direction).offset(direction)
-			val mutableState = access.getBlockState(mutable)
-
-			if (mutableState.isOf(this)) { // Updates self.
-				var newState = getStateForNeighborUpdate(state, direction, mutableState, access, pos, mutable)
-
-				if ( direction == Direction.EAST || direction == Direction.WEST ) newState = state.with(WIRE_CONNECTION_WEST, WireConnection.SIDE).with(WIRE_CONNECTION_EAST, WireConnection.SIDE)
-				if ( direction == Direction.SOUTH || direction == Direction.NORTH ) newState = state.with(WIRE_CONNECTION_SOUTH, WireConnection.SIDE).with(WIRE_CONNECTION_NORTH, WireConnection.SIDE)
-
-				replace(state, newState, access, pos, flags)
-			}
-		}
+		updateConnection(pos, state, access)
 	}
 
 	@Deprecated("Deprecated in Java")
 	override fun neighborUpdate(state: BlockState, world: World, pos: BlockPos, block: Block, fromPos: BlockPos, notify: Boolean) {
 		if (world.isClient) return
-		ESignal.LOGGER.info("Updated: BlockPos: {${pos.x}, ${pos.y}, ${pos.z}}")
+		if (!canPlaceAt(state, world, pos)){
+			dropStacks(state, world, pos)
+			world.removeBlock(pos, false)
+		}
+		updateConnection(pos, state, world)
 	}
 
-	private fun update(world: WorldAccess, pos: BlockPos, state: BlockState){
+	override fun updateConnection(pos: BlockPos, state: BlockState, access: WorldAccess) {
+		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in four direction.
+			val mutablePos = getSideConnectable(pos, direction)
 
+			val newState: BlockState =
+				if (ConnectableUtils.isConnectable(mutablePos, access)) state.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], WireConnection.SIDE)
+				else state.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], WireConnection.NONE)
+
+			replace(state, newState, access, pos, 2)
+		}
+	}
+
+	override fun getSideConnectable(pos: BlockPos, direction: Direction): BlockPos {
+		val mutablePos = Mutable().set(pos).offset(direction)
+		if ( mutablePos is CircuitConnectableBlock ) return mutablePos
+		return mutablePos
 	}
 }
