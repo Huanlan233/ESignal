@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "esignal:block/signal_block"
+    }
+  }
+}

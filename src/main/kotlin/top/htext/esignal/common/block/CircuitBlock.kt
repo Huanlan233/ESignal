@@ -19,10 +19,11 @@ import net.minecraft.world.BlockView
 import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
 import net.minecraft.world.WorldView
-import top.htext.esignal.utils.ConnectableUtils
+import top.htext.esignal.ESignal
+import top.htext.esignal.utils.SignalUtils
 
 @SuppressWarnings("deprecation")
-class CircuitBlock(settings: Settings?) : Block(settings), CircuitConnectableBlock {
+class CircuitBlock(settings: Settings?) : Block(settings), CircuitConnectableBlock, CircuitChargeableBlock {
 	private val shapeCache: MutableMap<BlockState, VoxelShape> = Maps.newHashMap()
 	private val dotState: BlockState
 	private val charge = false
@@ -115,17 +116,10 @@ class CircuitBlock(settings: Settings?) : Block(settings), CircuitConnectableBlo
 		return shapeCache[state.with(CHARGE, false)] !!
 	}
 
-
-	@Deprecated("Deprecated in Java")
-	override fun canPlaceAt(state: BlockState?, world: WorldView, pos: BlockPos): Boolean {
-		val blockPos = pos.down()
-		val blockState = world.getBlockState(blockPos)
-		return blockState.isSideSolidFullSquare(world, pos, Direction.UP)
-	}
-
 	@Deprecated("Deprecated in Java", ReplaceWith("super.prepare(state, world, pos, flags, maxUpdateDepth)", "net.minecraft.block.Block"))
 	override fun prepare(state: BlockState, access: WorldAccess, pos: BlockPos, flags: Int, maxUpdateDepth: Int) {
 		updateConnection(pos, state, access)
+		receiveSignal(pos, state, access)
 	}
 
 	@Deprecated("Deprecated in Java")
@@ -136,23 +130,53 @@ class CircuitBlock(settings: Settings?) : Block(settings), CircuitConnectableBlo
 			world.removeBlock(pos, false)
 		}
 		updateConnection(pos, state, world)
+		receiveSignal(pos, state, world)
+	}
+
+	@Deprecated("Deprecated in Java")
+	override fun canPlaceAt(state: BlockState?, world: WorldView, pos: BlockPos): Boolean {
+		val blockPos = pos.down()
+		val blockState = world.getBlockState(blockPos)
+		return blockState.isSideSolidFullSquare(world, pos, Direction.UP)
 	}
 
 	override fun updateConnection(pos: BlockPos, state: BlockState, access: WorldAccess) {
 		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in four direction.
-			val mutablePos = getSideConnectable(pos, direction)
+			val mutablePos = getBlockInDirection(pos, direction)
 
 			val newState: BlockState =
-				if (ConnectableUtils.isConnectable(mutablePos, access)) state.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], WireConnection.SIDE)
+				if (SignalUtils.isConnectable(mutablePos, access)) state.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], WireConnection.SIDE)
 				else state.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], WireConnection.NONE)
 
 			replace(state, newState, access, pos, 2)
 		}
 	}
 
-	override fun getSideConnectable(pos: BlockPos, direction: Direction): BlockPos {
+	private fun getBlockInDirection(pos: BlockPos, direction: Direction): BlockPos {
 		val mutablePos = Mutable().set(pos).offset(direction)
 		if ( mutablePos is CircuitConnectableBlock ) return mutablePos
 		return mutablePos
+	}
+
+	override fun emitSignal(pos: BlockPos, state: BlockState, access: WorldAccess): Boolean {
+//		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in four direction.
+//			val mutablePos = getBlockInDirection(pos, direction)
+//
+//			return SignalUtils.isChargeable(mutablePos, access) && (mutablePos as CircuitChargeableBlock).emitSignal(pos, state, access)
+//		}
+		return false
+	}
+
+	override fun receiveSignal(pos: BlockPos, state: BlockState, access: WorldAccess){
+		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in four direction.
+			val mutablePos = getBlockInDirection(pos, direction)
+			val mutableState = access.getBlockState(getBlockInDirection(pos, direction))
+
+			var newState = state
+			if (SignalUtils.isChargeable(mutablePos, access) && (mutableState.block as CircuitChargeableBlock).emitSignal(mutablePos, state, access))
+				newState = state.with(CHARGE, true)
+
+			replace(state, newState, access, pos, 2)
+		}
 	}
 }

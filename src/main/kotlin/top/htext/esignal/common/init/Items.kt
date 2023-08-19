@@ -9,7 +9,9 @@ import top.htext.esignal.ESignal
 
 object Items {
 	val CIRCUIT_ITEM = BlockItem(Blocks.CIRCUIT_BLOCK, FabricItemSettings().group(ItemGroup.REDSTONE))
+	val SIGNAL_ITEM = BlockItem(Blocks.SIGNAL_BLOCK, FabricItemSettings().group(ItemGroup.REDSTONE))
 	fun registry(){
 		Registry.register(Registry.ITEM, Identifier(ESignal.MOD_ID, "circuit"), CIRCUIT_ITEM)
+		Registry.register(Registry.ITEM, Identifier(ESignal.MOD_ID, "signal_block"), SIGNAL_ITEM)
 	}
 }

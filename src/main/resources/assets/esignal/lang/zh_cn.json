@@ -1,3 +1,4 @@
 {
-  "block.esignal.circuit": "电路"
+  "block.esignal.circuit": "电路",
+  "block.esignal.signal_block": "电信号块"
 }
