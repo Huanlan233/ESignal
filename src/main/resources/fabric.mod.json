@@ -15,10 +15,10 @@
   "environment": "*",
   "entrypoints": {
     "client": [
-      "htext.top.esignal.client.ESignalClient"
+      "top.htext.esignal.client.ESignalClient"
     ],
     "main": [
-      "htext.top.esignal.ESignal"
+      "top.htext.esignal.ESignal"
     ]
   },
   "mixins": [

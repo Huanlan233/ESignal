@@ -1,15 +1,16 @@
-package htext.top.esignal;
+package top.htext.esignal;
 
-import htext.top.esignal.common.block.Blocks
-import htext.top.esignal.common.item.Items
 import net.fabricmc.api.ModInitializer
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
+import top.htext.esignal.common.init.Blocks
+import top.htext.esignal.common.init.Items
 
 class ESignal: ModInitializer {
 	companion object {
-		val MOD_ID: String = "esignal"
-		val MOD_NAME: String = "ESignal"
-		val LOGGER = LogManager.getLogger(MOD_NAME)
+		const val MOD_ID: String = "esignal"
+		const val MOD_NAME: String = "ESignal"
+		val LOGGER: Logger = LogManager.getLogger(MOD_NAME)
 	}
 	override fun onInitialize() {
 		LOGGER.info("Initialized.")

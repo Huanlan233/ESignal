@@ -1,4 +1,4 @@
-package htext.top.esignal.client;
+package top.htext.esignal.client;
 
 import net.fabricmc.api.ClientModInitializer
 
