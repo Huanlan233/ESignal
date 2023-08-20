@@ -20,10 +20,12 @@ import net.minecraft.world.World
 import net.minecraft.world.WorldAccess
 import net.minecraft.world.WorldView
 import top.htext.esignal.ESignal
+import top.htext.esignal.common.block.interfaces.SignalChargeableBlock
+import top.htext.esignal.common.block.interfaces.SignalConnectableBlock
 import top.htext.esignal.utils.SignalUtils
 
 @SuppressWarnings("deprecation")
-class CircuitBlock(settings: Settings?) : Block(settings), CircuitConnectableBlock, CircuitChargeableBlock {
+class CircuitBlock(settings: Settings?) : Block(settings), SignalConnectableBlock, SignalChargeableBlock {
 	private val shapeCache: MutableMap<BlockState, VoxelShape> = Maps.newHashMap()
 	private val dotState: BlockState
 	private val charge = false
@@ -118,8 +120,17 @@ class CircuitBlock(settings: Settings?) : Block(settings), CircuitConnectableBlo
 
 	@Deprecated("Deprecated in Java", ReplaceWith("super.prepare(state, world, pos, flags, maxUpdateDepth)", "net.minecraft.block.Block"))
 	override fun prepare(state: BlockState, access: WorldAccess, pos: BlockPos, flags: Int, maxUpdateDepth: Int) {
-		updateConnection(pos, state, access)
-		receiveSignal(pos, state, access)
+		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in six directions.
+			val isReceivedSignal = isReceivedSignal(pos, state, direction, access)
+			val updateConnection = updateConnection(pos, state, direction, access)
+
+			val newState = state
+//				.with(CHARGE, isReceivedSignal)
+				.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], updateConnection)
+
+			replace(state, newState, access, pos, flags)
+		}
+
 	}
 
 	@Deprecated("Deprecated in Java")
@@ -129,8 +140,17 @@ class CircuitBlock(settings: Settings?) : Block(settings), CircuitConnectableBlo
 			dropStacks(state, world, pos)
 			world.removeBlock(pos, false)
 		}
-		updateConnection(pos, state, world)
-		receiveSignal(pos, state, world)
+
+		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in six directions.
+			val isReceivedSignal = isReceivedSignal(pos, state, direction, world)
+			val updateConnection = updateConnection(pos, state, direction, world)
+
+			val newState = state
+//				.with(CHARGE, isReceivedSignal)
+				.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], updateConnection)
+
+			replace(state, newState, world, pos, 2)
+		}
 	}
 
 	@Deprecated("Deprecated in Java")
@@ -140,43 +160,28 @@ class CircuitBlock(settings: Settings?) : Block(settings), CircuitConnectableBlo
 		return blockState.isSideSolidFullSquare(world, pos, Direction.UP)
 	}
 
-	override fun updateConnection(pos: BlockPos, state: BlockState, access: WorldAccess) {
-		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in four direction.
-			val mutablePos = getBlockInDirection(pos, direction)
+	override fun updateConnection(pos: BlockPos, state: BlockState, direction: Direction, access: WorldAccess): WireConnection {
+		val mutablePos = getBlockInDirection(pos, direction, access)
 
-			val newState: BlockState =
-				if (SignalUtils.isConnectable(mutablePos, access)) state.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], WireConnection.SIDE)
-				else state.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], WireConnection.NONE)
-
-			replace(state, newState, access, pos, 2)
-		}
+		if (SignalUtils.isConnectable(mutablePos, access)) return WireConnection.SIDE
+		return WireConnection.NONE
 	}
 
-	private fun getBlockInDirection(pos: BlockPos, direction: Direction): BlockPos {
+	private fun getBlockInDirection(pos: BlockPos, direction: Direction, access: WorldAccess): BlockPos {
 		val mutablePos = Mutable().set(pos).offset(direction)
-		if ( mutablePos is CircuitConnectableBlock ) return mutablePos
+		val mutableState = access.getBlockState(mutablePos)
+		if ( mutableState.block is SignalConnectableBlock) return mutablePos
 		return mutablePos
 	}
 
-	override fun emitSignal(pos: BlockPos, state: BlockState, access: WorldAccess): Boolean {
-//		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in four direction.
-//			val mutablePos = getBlockInDirection(pos, direction)
-//
-//			return SignalUtils.isChargeable(mutablePos, access) && (mutablePos as CircuitChargeableBlock).emitSignal(pos, state, access)
-//		}
+	override fun isEmittedSignal(pos: BlockPos, state: BlockState, access: WorldAccess): Boolean {
 		return false
 	}
 
-	override fun receiveSignal(pos: BlockPos, state: BlockState, access: WorldAccess){
-		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in four direction.
-			val mutablePos = getBlockInDirection(pos, direction)
-			val mutableState = access.getBlockState(getBlockInDirection(pos, direction))
+	override fun isReceivedSignal(pos: BlockPos, state: BlockState, direction: Direction, access: WorldAccess): Boolean{
+		val mutablePos = getBlockInDirection(pos, direction, access)
+		val mutableState = access.getBlockState(mutablePos)
 
-			var newState = state
-			if (SignalUtils.isChargeable(mutablePos, access) && (mutableState.block as CircuitChargeableBlock).emitSignal(mutablePos, state, access))
-				newState = state.with(CHARGE, true)
-
-			replace(state, newState, access, pos, 2)
-		}
+		return SignalUtils.isChargeable(mutablePos, access) && (mutableState.block as SignalChargeableBlock).isEmittedSignal(mutablePos, state, access)
 	}
 }
