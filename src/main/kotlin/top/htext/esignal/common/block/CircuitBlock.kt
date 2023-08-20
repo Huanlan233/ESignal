@@ -121,11 +121,11 @@ class CircuitBlock(settings: Settings?) : Block(settings), SignalConnectableBloc
 	@Deprecated("Deprecated in Java", ReplaceWith("super.prepare(state, world, pos, flags, maxUpdateDepth)", "net.minecraft.block.Block"))
 	override fun prepare(state: BlockState, access: WorldAccess, pos: BlockPos, flags: Int, maxUpdateDepth: Int) {
 		for (direction: Direction in Direction.Type.HORIZONTAL) { // Traverses changes in six directions.
+			//TODO: Fixes the bug that method isReceivedSignal() will occur stack overflow
 			val isReceivedSignal = isReceivedSignal(pos, state, direction, access)
 			val updateConnection = updateConnection(pos, state, direction, access)
 
 			val newState = state
-//				.with(CHARGE, isReceivedSignal)
 				.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], updateConnection)
 
 			replace(state, newState, access, pos, flags)
@@ -146,7 +146,6 @@ class CircuitBlock(settings: Settings?) : Block(settings), SignalConnectableBloc
 			val updateConnection = updateConnection(pos, state, direction, world)
 
 			val newState = state
-//				.with(CHARGE, isReceivedSignal)
 				.with(DIRECTION_TO_WIRE_CONNECTION_PROPERTY[direction], updateConnection)
 
 			replace(state, newState, world, pos, 2)

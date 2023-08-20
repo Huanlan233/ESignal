@@ -12,9 +12,11 @@ import net.minecraft.world.WorldAccess
  * */
 interface SignalConnectableBlock {
 	/**
-	* Updates self and adjacent blocks' connection states.
-	 * @param pos The position of the block what will be updated.
-	 * @param state The states of the block what will be updated.
+	* Updates self and adjacent blocks' connections.
+	 * @param pos The position of the block in direction what will be updated.
+	 * @param state The states of the block in direction what will be updated.
+	 * @param direction The side what will be updated.
+	 * @return The connection states.
 	*/
 	fun updateConnection(pos: BlockPos, state: BlockState, direction: Direction,access: WorldAccess): WireConnection
 }
